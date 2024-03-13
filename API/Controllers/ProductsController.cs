@@ -1,3 +1,4 @@
+using System.Reflection.Metadata.Ecma335;
 using API.Data;
 using API.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -14,14 +15,19 @@ namespace API.Controllers
         public ProductsController(StoreContext context)
         {
             _context = context;
-        
+
         }
 
         [HttpGet]
         public async Task<ActionResult<List<Product>>> GetProducts() => await _context.Products.ToListAsync();
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(int id) => await _context.Products.FindAsync(id);
+        public async Task<ActionResult<Product>> GetProduct(int id)
+        {
+            var product = await _context.Products.FindAsync(id);
+
+            return product == null ? NotFound() : product;
+        }
 
     }
 }
