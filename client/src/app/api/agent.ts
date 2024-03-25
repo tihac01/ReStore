@@ -1,6 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from "react-toastify";
 import { router } from "../router/Routes";
+import { PaginatedResponse } from "../models/pagination.ts";
 
 const sleep = () => new Promise(resolve => setTimeout(resolve, 100))
 
@@ -11,39 +12,53 @@ const responseBody = (respose: AxiosResponse) => respose.data;
 
 axios.interceptors.response.use(async response => {
     await sleep();
+    const pagination = response.headers['pagination'];
+    if (pagination) {
+        response.data = new PaginatedResponse(response.data, JSON.parse(pagination));
+        return response;
+    }
     return response
 }, (error: AxiosError) => {
     const {data, status} = error.response as AxiosResponse;
-    switch (status)
-    {
+    switch (status) {
         case 400:
-            toast.error(data.title)
-            break
+            if (data.errors) {
+                const modelStateErrors: string[] = [];
+                for (const key in data.errors) {
+                    if (data.errors[key]) {
+                        modelStateErrors.push(data.errors[key])
+                    }
+                }
+                throw modelStateErrors.flat();
+            }
+            toast.error(data.title);
+            break;
         case 401:
-            toast.error(data.title)
-            break
-        case 404:
-            toast.error(data.title)
-            break
+            toast.error(data.title);
+            break;
+        case 403:
+            toast.error('You are not allowed to do that!');
+            break;
         case 500:
-            router.navigate('/server-error', {state: {error: data}});
-            break
+            router.navigate('/server-error', {state: {error: data}})
+            break;
         default:
-            break
+            break;
     }
-    return Promise.reject(error.response)
+    return Promise.reject(error.response);
 })
 
 const requests = {
-    get: (url: string) => axios.get(url).then(responseBody),
+    get: (url: string, params?: URLSearchParams) => axios.get(url, {params}).then(responseBody),
     post: (url: string, body: object) => axios.post(url, body).then(responseBody),
     put: (url: string, body: object) => axios.put(url, body).then(responseBody),
     delete: (url: string) => axios.delete(url).then(responseBody),
 }
 
 const Catalog = {
-    list: () => requests.get('products'),
-    details: (id: number) => requests.get(`products/${id}`)
+    list: (params: URLSearchParams) => requests.get('products', params),
+    details: (id: number) => requests.get(`products/${id}`),
+    fetchFilters: () => requests.get('products/filters')
 }
 
 const Basket = {
