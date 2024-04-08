@@ -1,27 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
-import Header from "./Header";
-import {
-  Container,
-  CssBaseline,
-  ThemeProvider,
-  createTheme,
-} from "@mui/material";
-import { Outlet } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import LoadingComponent from "./LoadingComponents";
-import { useAppDispatch } from "../store/configureStore";
-import { fetchCurrentUser } from "../../features/account/accountSlice";
-import { fatchBasketAsync } from "../../features/basket/basketSlice";
+import { Container, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import Header from './Header';
+import { useCallback, useEffect, useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import LoadingComponent from './LoadingComponent';
+import { useAppDispatch } from '../store/configureStore';
+import { fetchBasketAsync } from '../../features/basket/basketSlice';
+import { fetchCurrentUser } from '../../features/account/accountSlice';
+import HomePage from '../../features/home/HomePage';
 
 function App() {
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
 
   const initApp = useCallback(async () => {
     try {
       await dispatch(fetchCurrentUser());
-      await dispatch(fatchBasketAsync());
+      await dispatch(fetchBasketAsync());
     } catch (error) {
       console.log(error);
     }
@@ -29,36 +26,37 @@ function App() {
 
   useEffect(() => {
     initApp().then(() => setLoading(false));
-  }, [initApp]);
-
+  }, [initApp])
+  
   const [darkMode, setDarkMode] = useState(false);
-  const paletteType = darkMode ? "dark" : "light";
-
+  const palleteType = darkMode ? 'dark' : 'light';
   const theme = createTheme({
     palette: {
-      mode: paletteType,
+      mode: palleteType,
       background: {
-        default: paletteType === "light" ? "#eaeaeaea" : "#121212",
-      },
-    },
-  });
+        default: (palleteType === 'light') ? '#eaeaea' : '#121212'
+      }
+    }
+  })
 
   function handleThemeChange() {
     setDarkMode(!darkMode);
   }
 
-  if (loading) return <LoadingComponent message="Initialising app ..." />;
-
   return (
     <ThemeProvider theme={theme}>
-      <ToastContainer position="bottom-right" hideProgressBar theme="colored" />
+      <ToastContainer position='bottom-right' hideProgressBar theme='colored'  />
       <CssBaseline />
       <Header darkMode={darkMode} handleThemeChange={handleThemeChange} />
-      <Container>
-        <Outlet />
-      </Container>
+      {
+        loading ? <LoadingComponent message='Initialising app...' />
+          : location.pathname === '/' ? <HomePage />
+          : <Container sx={{mt: 4}}>
+              <Outlet />
+            </Container>
+      }
     </ThemeProvider>
   );
 }
 
-export default App;
+export default App

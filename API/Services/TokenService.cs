@@ -1,4 +1,3 @@
-using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -15,17 +14,18 @@ public class TokenService
 
     public TokenService(UserManager<User> userManager, IConfiguration config)
     {
-        _userManager = userManager;
         _config = config;
+        _userManager = userManager;
     }
 
     public async Task<string> GenerateToken(User user)
     {
+        //claims
         var claims = new List<Claim>
-        {
-            new (ClaimTypes.Email, user.Email),
-            new (ClaimTypes.Name, user.UserName)
-        };
+            {
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.UserName)
+            };
 
         var roles = await _userManager.GetRolesAsync(user);
         foreach (var role in roles)

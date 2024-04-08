@@ -1,4 +1,4 @@
-export interface MetaData{
+export interface MetaData {
     currentPage: number;
     totalPages: number;
     pageSize: number;

@@ -1,7 +1,8 @@
-import { Basket } from "./Basket";
+import { Basket } from './basket';
 
-export interface User{
+export interface User {
     email: string;
     token: string;
     basket?: Basket;
+    roles?: string[];
 }
